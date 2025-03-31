@@ -21,7 +21,7 @@ pip install -e .
 - `alpha_prototype.py`: Core facial recognition system
 - `experiment_runner.py`: Tests the system's performance
 
-## Usage Instructions
+## Usage Instructions (ensure you are in the alpha-prototype directory)
 
 ### 1. Download the dataset
 ```bash
