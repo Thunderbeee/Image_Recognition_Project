@@ -4,9 +4,15 @@
 
 Download the following dependencies:
 ```bash
+cd alpha-prototype
+
 conda create -n alpha-prototype python=3.10
 conda activate alpha-prototype
 pip install requests tqdm
+
+git clone https://github.com/serengil/deepface.git
+cd deepface
+pip install -e .
 ```
 
 ## Project Structure
@@ -27,9 +33,9 @@ python download.py
 python experiment_maker.py
 ```
 
-### 3. Run the facial recognition system
+### 3. Run the facial recognition system (optional, it is used for sanity check)
 ```bash
-python alpha_prototype.py
+python alpha_prototype.py 
 ```
 
 ### 4. Evaluate system performance
@@ -48,4 +54,3 @@ You can adjust various parameters in each module:
 ## Notes
 - The system assumes a closed-world scenario where all probe subjects are in the template database
 - Performance metrics are saved in the results directory for analysis
-```# Image_Recognition_Project
