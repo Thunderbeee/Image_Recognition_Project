@@ -43,7 +43,6 @@ class ExperimentMaker:
         if max_probe_individuals is None:
             max_probe_individuals = max_template_individuals
             
-        # Get all available individuals (directories)
         all_individuals = []
         for item in os.listdir(self.reference_db_path):
             item_path = self.reference_db_path / item
@@ -55,25 +54,20 @@ class ExperimentMaker:
             max_template_individuals = len(all_individuals)
             max_probe_individuals = min(max_probe_individuals, max_template_individuals)
         
-        # Randomly select individuals for template database
         template_individuals = random.sample(all_individuals, max_template_individuals)
         
-        # Use the same individuals for probes (closed world assumption)
         probe_individuals = template_individuals[:max_probe_individuals]
         
         template_data = {}
         probe_data = {}
         
-        # Create template database
         for individual in template_individuals:
             individual_path = self.reference_db_path / individual
             images = [f for f in os.listdir(individual_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
             
-            # Ensure we have enough images
             if len(images) < images_per_template_individual + images_per_probe_individual:
                 print(f"Warning: Individual {individual} has only {len(images)} images, need at least "
                       f"{images_per_template_individual + images_per_probe_individual}")
-                # Use what we have, prioritizing templates
                 template_imgs = images[:min(images_per_template_individual, len(images))]
                 probe_imgs = []
                 if individual in probe_individuals and len(images) > images_per_template_individual:
@@ -81,7 +75,6 @@ class ExperimentMaker:
                                         images_per_template_individual + min(images_per_probe_individual, 
                                                                            len(images) - images_per_template_individual)]
             else:
-                # Randomly split images between template and probe
                 random.shuffle(images)
                 template_imgs = images[:images_per_template_individual]
                 probe_imgs = []
@@ -89,14 +82,11 @@ class ExperimentMaker:
                     probe_imgs = images[images_per_template_individual:
                                         images_per_template_individual + images_per_probe_individual]
             
-            # Add to template data
             template_data[individual] = [str(individual_path / img) for img in template_imgs]
             
-            # Add to probe data if applicable
             if individual in probe_individuals and probe_imgs:
                 probe_data[individual] = [str(individual_path / img) for img in probe_imgs]
         
-        # Save template and probe datasets
         os.makedirs(os.path.dirname(templatedb_path), exist_ok=True)
         os.makedirs(os.path.dirname(probes_path), exist_ok=True)
         
