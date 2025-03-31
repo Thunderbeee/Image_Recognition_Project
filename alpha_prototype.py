@@ -116,7 +116,7 @@ class AlphaPrototype:
 if __name__ == "__main__":
     # change to your own path there
     # and make sure the path is correct
+    # sanity check
     prototype = AlphaPrototype("data/experiment/templatedb.json")
     result = prototype.identify("/home/azureuser/mingyuan/alpha-prototype/data/extracted/52/TD_RGB_E_5.jpg")
     print(f"Identified as: {result['name']} (Distance: {result['distance']})")
-    # sanity check
