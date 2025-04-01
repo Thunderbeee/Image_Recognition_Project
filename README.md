@@ -20,6 +20,7 @@ pip install -e .
 - `experiment_maker.py`: Creates template and probe datasets from reference data
 - `alpha_prototype.py`: Core facial recognition system
 - `experiment_runner.py`: Tests the system's performance
+- `student`: Directory containing student data of our photos
 
 ## Usage Instructions (ensure you are in the alpha-prototype directory)
 

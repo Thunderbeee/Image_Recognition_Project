@@ -5,9 +5,17 @@ import shutil
 from pathlib import Path
 
 class ExperimentMaker:
-    def __init__(self, reference_db_path):
-        """Initialize with path to the reference database of labeled photos."""
+    def __init__(self, reference_db_path, include_student=True):
+        """
+        Initialize with path to the reference database of labeled photos.
+        
+        Args:
+            reference_db_path: Path to the reference database
+            include_student: Whether to include photos from student directory
+        """
         self.reference_db_path = Path(reference_db_path)
+        self.student_path = Path("student")
+        self.include_student = include_student
         self.excluded_participants = self._get_excluded_participants()
         
     def _get_excluded_participants(self):
@@ -22,6 +30,7 @@ class ExperimentMaker:
                         if len(parts) > 1:
                             participant_id = parts[1].split()[0].strip()
                             excluded.append(participant_id)
+        
         return excluded
     
     def create_datasets(self, templatedb_path, probes_path, 
@@ -44,29 +53,39 @@ class ExperimentMaker:
             max_probe_individuals = max_template_individuals
             
         all_individuals = []
+        
+        # Get individuals from main reference database
         for item in os.listdir(self.reference_db_path):
             item_path = self.reference_db_path / item
             if item_path.is_dir() and item not in self.excluded_participants:
-                all_individuals.append(item)
+                all_individuals.append({"id": item, "path": item_path})
         
         if len(all_individuals) < max_template_individuals:
             print(f"Warning: Only {len(all_individuals)} individuals available")
             max_template_individuals = len(all_individuals)
             max_probe_individuals = min(max_probe_individuals, max_template_individuals)
         
-        template_individuals = random.sample(all_individuals, max_template_individuals)
-        
+        random.shuffle(all_individuals)
+        template_individuals = all_individuals[:max_template_individuals]
         probe_individuals = template_individuals[:max_probe_individuals]
+
+        if self.include_student and self.student_path.exists():
+            for item in os.listdir(self.student_path):
+                item_path = self.student_path / item
+                if item_path.is_dir() and item not in self.excluded_participants:
+                    template_individuals.append({"id": item, "path": item_path})
+                    probe_individuals.append({"id": item, "path": item_path})
         
         template_data = {}
         probe_data = {}
         
         for individual in template_individuals:
-            individual_path = self.reference_db_path / individual
+            individual_id = individual["id"]
+            individual_path = individual["path"]
             images = [f for f in os.listdir(individual_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
             
             if len(images) < images_per_template_individual + images_per_probe_individual:
-                print(f"Warning: Individual {individual} has only {len(images)} images, need at least "
+                print(f"Warning: Individual {individual_id} has only {len(images)} images, need at least "
                       f"{images_per_template_individual + images_per_probe_individual}")
                 template_imgs = images[:min(images_per_template_individual, len(images))]
                 probe_imgs = []
@@ -82,10 +101,10 @@ class ExperimentMaker:
                     probe_imgs = images[images_per_template_individual:
                                         images_per_template_individual + images_per_probe_individual]
             
-            template_data[individual] = [str(individual_path / img) for img in template_imgs]
+            template_data[individual_id] = [str(individual_path / img) for img in template_imgs]
             
             if individual in probe_individuals and probe_imgs:
-                probe_data[individual] = [str(individual_path / img) for img in probe_imgs]
+                probe_data[individual_id] = [str(individual_path / img) for img in probe_imgs]
         
         os.makedirs(os.path.dirname(templatedb_path), exist_ok=True)
         os.makedirs(os.path.dirname(probes_path), exist_ok=True)
@@ -102,7 +121,7 @@ class ExperimentMaker:
         return template_data, probe_data
 
 if __name__ == "__main__":
-    maker = ExperimentMaker("data/extracted")
+    maker = ExperimentMaker("data/extracted", include_student=True)
     template_data, probe_data = maker.create_datasets(
         "data/experiment/templatedb.json",
         "data/experiment/probes.json",
